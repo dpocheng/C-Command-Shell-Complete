@@ -1,0 +1,32 @@
+To-Do
+=====
+
+- Handle input redirection
+- Handle output redirection
+
+
+Notes
+=====
+From Ian:
+1) After looking at how we were handling background process reaping, I found that we were doing it wrong
+and that no reaping actually took place. Load the version of shellex.c and csapp.c that Dennis
+committed on 4/22/15 @ 10:55AM called with the comment "Add csapp.c". Then compile and run the shell.
+Now enter any non-built-in command (like test.c that I committed with this) without the & argument.
+The process will finish, and after waiting for a few seconds to assure the child process that the
+command was running finishes press control-z to send the SIGTSTP command and stop (but not kill) the shell
+process. Now enter the ps command. There will be the shell running-- all is well. Enter kill <pid> to kill
+the command. Now run the shell again, but run the same command with the & argument to run the process in
+the background. Wait a few seconds for the process to finish, and then press control-z again. Now enter
+ps to see the processes. You will see that there is a child process that is a zombie which should be
+denoted by <defunct> (on my Mac it was in parenthesis instead). The code we had up to this commit doesn't
+reap background processes correctly.
+
+2) After changing the code to start using a signal handler, the code may or may not reap the child background
+process. The signal handler is called, but an error occurs and ends the shell process. I'm not sure if
+the child process is reaped by the signal handler and then an error occurs and exits, or if the child process
+is reaped by the system upon the failure of the shell (which would reap all zombie child processes).
+
+The error is "waitpid error: Undefined error: 0"
+
+
+- Reset redirection IO for next command
